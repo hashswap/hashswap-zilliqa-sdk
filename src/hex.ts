@@ -13,6 +13,7 @@ import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './util
 import { sendBatchRequest, BatchRequest } from './batch'
 
 import { Options, OnUpdate, ObservedTx, TxStatus, TxReceipt, TxParams, Rates, WalletProvider, RPCBalanceResponse } from './index'
+import { Zilo, OnStateUpdate } from './zilo'
 
 export * as Zilo from './zilo'
 
@@ -79,6 +80,9 @@ export class Hex {
   readonly contractAddress: string
   readonly contractHash: string
 
+  /* Zilswap initial launch offerings */
+  readonly zilos: { [address: string]: Zilo }
+
   /* Transaction attributes */
   readonly _txParams: TxParams = {
     version: -1,
@@ -112,6 +116,7 @@ export class Hex {
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
     this.tokens = {}
+    this.zilos = {}
     this._txParams.version = CHAIN_VERSIONS[network]
     console.log('SDK ----- INITIALIZE ----- 3')
 
@@ -153,6 +158,59 @@ export class Hex {
     console.log('test22222222')
     console.log(this)
     console.log('test22222222')
+  }
+
+  /**
+   * Initializes a new Zilo instance and registers it to the ZilSwap SDK,
+   * subscribing to subsequent state changes in the Zilo instance. You may
+   * optionally pass a state observer to subscribe to state changes of this
+   * particular Zilo instance.
+   *
+   * If the Zilo instance is already registered, no new instance will be
+   * created. If a new state observer is provided, it will overwrite the
+   * existing one.
+   *
+   * @param address is the Zilo contract address which can be given by
+   * either hash (0x...) or bech32 address (zil...).
+   * @param onStateUpdate is the state observer which triggers when state
+   * updates
+   */
+  public async registerZilo(address: string, onStateUpdate?: OnStateUpdate): Promise<Zilo> {
+    console.log('test33333333333')
+    const byStr20Address = this.parseRecipientAddress(address)
+
+    if (this.zilos[byStr20Address]) {
+      this.zilos[byStr20Address].updateObserver(onStateUpdate)
+      return this.zilos[byStr20Address]
+    }
+
+    const zilo = new Zilo(this, byStr20Address)
+    await zilo.initialize(onStateUpdate)
+    this.zilos[byStr20Address] = zilo
+
+    this.subscribeToAppChanges()
+
+    return zilo
+  }
+
+  /**
+   * Deregisters an existing Zilo instance. Does nothing if provided
+   * address is not already registered.
+   *
+   * @param address is the Zilo contract address which can be given by
+   * either hash (0x...) or bech32 address (zil...).
+   */
+  public deregisterZilo(address: string) {
+    console.log('test44444444444444')
+    const byStr20Address = this.parseRecipientAddress(address)
+
+    if (!this.zilos[byStr20Address]) {
+      return
+    }
+
+    delete this.zilos[address]
+
+    this.subscribeToAppChanges()
   }
 
   /**
@@ -399,10 +457,9 @@ export class Hex {
    * @returns an ObservedTx if IncreaseAllowance was called, null if not.
    */
   public async approveTokenTransferToHexIfRequired(
-    tokenID: string,
-    amountStrOrBN: BigNumber | string,
-    spenderHash: string = this.contractHash
-  ): Promise<ObservedTx | null> {
+    tokenID: string, 
+    amountStrOrBN: BigNumber | string, 
+    spenderHash: string = this.contractHash ): Promise<ObservedTx | null> {
     // Check logged in
     this.checkAppLoadedWithUser()
 

@@ -2,6 +2,7 @@ import { Contract, Value } from '@zilliqa-js/contract'
 import { BN } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { ObservedTx, Zilswap } from './index'
+import { Hex } from './hex'
 import { ILOState } from './constants'
 import { contractInitToMap, unitlessBigNumber } from './utils'
 
@@ -69,13 +70,13 @@ export type ZiloAppState = {
  * ```
  */
 export class Zilo {
-  private zilswap: Zilswap
+  private zilswap: Hex
   private contract: Contract
   private appState?: ZiloAppState
 
   private stateObserver?: OnStateUpdate
 
-  constructor(zilswap: Zilswap, address: string) {
+  constructor(zilswap: Hex, address: string) {
     this.zilswap = zilswap
     this.contract = zilswap.getContract(address)
   }

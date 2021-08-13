@@ -1,11 +1,11 @@
 {
-  "name": "hashswap-zilliqa-sdk",
+  "name": "hashswap-zilliqa-js-sdk",
   "version": "1.0.120",
-  "description": "Hashswap Javascript SDK",
+  "description": "Hashswap Javascript SDK for Zilliqa Network",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "repository": "https://github.com/hashswap/hashswap-sdk.git",
-  "homepage": "https://github.com/hashswap/hashswap-sdk.git#readme",
+  "repository": "https://github.com/hashswap/hashswap-zilliqa-sdk.git",
+  "homepage": "https://github.com/hashswap/hashswap-zilliqa-sdk.git#readme",
   "author": "Hashswap",
   "license": "MIT",
   "scripts": {

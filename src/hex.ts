@@ -14,6 +14,8 @@ import { sendBatchRequest, BatchRequest } from './batch'
 
 import { Options, OnUpdate, ObservedTx, TxStatus, TxReceipt, TxParams, Rates, WalletProvider, RPCBalanceResponse } from './index'
 
+export * as Zilo from './zilo'
+
 BigNumber.config({ EXPONENTIAL_AT: 1e9 }) // never!
 
 export type TokenDetails = {
@@ -397,10 +399,9 @@ export class Hex {
    * @returns an ObservedTx if IncreaseAllowance was called, null if not.
    */
   public async approveTokenTransferToHexIfRequired(
-    tokenID: string,
-    amountStrOrBN: BigNumber | string,
-    spenderHash: string = this.contractHash
-  ): Promise<ObservedTx | null> {
+    tokenID: string, 
+    amountStrOrBN: BigNumber | string, 
+    spenderHash: string = this.contractHash ): Promise<ObservedTx | null> {
     // Check logged in
     this.checkAppLoadedWithUser()
 

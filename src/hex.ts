@@ -23,6 +23,7 @@ export type TokenDetails = {
   contract: Contract // instance
   address: string
   hash: string
+  name: string
   symbol: string
   decimals: number
   registered: boolean // is in default token list
@@ -1591,7 +1592,7 @@ export class Hex {
     console.log(id, '44444411111----------STARTTTTT')
     if (hash === ZIL_HASH) {
       console.log(id, '55555511111----------STARTTTTT')
-      return { contract, address, hash, symbol: 'ZIL', decimals: 12, whitelisted: true, registered: true }
+      return { contract, address, hash, name: 'Zilliqa', symbol: 'ZIL', decimals: 12, whitelisted: true, registered: true }
       console.log(id, '66666611111----------STARTTTTT')
     }
 
@@ -1600,12 +1601,13 @@ export class Hex {
 
     const decimalStr = init.find((e: Value) => e.vname === 'decimals').value as string
     const decimals = parseInt(decimalStr, 10)
+    const name = init.find((e: Value) => e.vname === 'name').value as string
     const symbol = init.find((e: Value) => e.vname === 'symbol').value as string
     const registered = this.tokens[symbol] === address
     const whitelisted = registered && (symbol === 'ZWAP' || symbol === 'XSGD' || symbol === 'gZIL') // TODO: make an actual whitelist
 
     console.log(id, '222222----------STARTTTTT END')
-    return { contract, address, hash, symbol, decimals, whitelisted, registered }
+    return { contract, address, hash, name, symbol, decimals, whitelisted, registered }
   }
 
   private async checkAllowedBalance(token: TokenDetails, amount: BigNumber) {

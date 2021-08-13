@@ -457,9 +457,10 @@ export class Hex {
    * @returns an ObservedTx if IncreaseAllowance was called, null if not.
    */
   public async approveTokenTransferToHexIfRequired(
-    tokenID: string, 
-    amountStrOrBN: BigNumber | string, 
-    spenderHash: string = this.contractHash ): Promise<ObservedTx | null> {
+    tokenID: string,
+    amountStrOrBN: BigNumber | string,
+    spenderHash: string = this.contractHash
+  ): Promise<ObservedTx | null> {
     // Check logged in
     this.checkAppLoadedWithUser()
 

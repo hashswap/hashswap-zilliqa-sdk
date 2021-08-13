@@ -11,11 +11,9 @@ import { Mutex } from 'async-mutex'
 import { APIS, WSS, CONTRACTS, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH } from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
-import { Zilo, OnStateUpdate } from './zilo'
 import { Hello } from './hello'
 
 export * as Hello from './hello'
-export * as Zilo from './zilo'
 
 BigNumber.config({ EXPONENTIAL_AT: 1e9 }) // never!
 
@@ -120,9 +118,6 @@ export class Zilswap {
   readonly contractAddress: string
   readonly contractHash: string
 
-  /* Zilswap initial launch offerings */
-  readonly zilos: { [address: string]: Zilo }
-
   /* Transaction attributes */
   readonly _txParams: TxParams = {
     version: -1,
@@ -155,7 +150,6 @@ export class Zilswap {
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
     this.tokens = {}
-    this.zilos = {}
     this._txParams.version = CHAIN_VERSIONS[network]
 
     if (options) {
@@ -195,59 +189,6 @@ export class Zilswap {
     console.log('test22222222')
     console.log(this)
     console.log('test22222222')
-  }
-
-  /**
-   * Initializes a new Zilo instance and registers it to the ZilSwap SDK,
-   * subscribing to subsequent state changes in the Zilo instance. You may
-   * optionally pass a state observer to subscribe to state changes of this
-   * particular Zilo instance.
-   *
-   * If the Zilo instance is already registered, no new instance will be
-   * created. If a new state observer is provided, it will overwrite the
-   * existing one.
-   *
-   * @param address is the Zilo contract address which can be given by
-   * either hash (0x...) or bech32 address (zil...).
-   * @param onStateUpdate is the state observer which triggers when state
-   * updates
-   */
-  public async registerZilo(address: string, onStateUpdate?: OnStateUpdate): Promise<Zilo> {
-    console.log('test33333333333')
-    const byStr20Address = this.parseRecipientAddress(address)
-
-    if (this.zilos[byStr20Address]) {
-      this.zilos[byStr20Address].updateObserver(onStateUpdate)
-      return this.zilos[byStr20Address]
-    }
-
-    const zilo = new Zilo(this, byStr20Address)
-    await zilo.initialize(onStateUpdate)
-    this.zilos[byStr20Address] = zilo
-
-    this.subscribeToAppChanges()
-
-    return zilo
-  }
-
-  /**
-   * Deregisters an existing Zilo instance. Does nothing if provided
-   * address is not already registered.
-   *
-   * @param address is the Zilo contract address which can be given by
-   * either hash (0x...) or bech32 address (zil...).
-   */
-  public deregisterZilo(address: string) {
-    console.log('test44444444444444')
-    const byStr20Address = this.parseRecipientAddress(address)
-
-    if (!this.zilos[byStr20Address]) {
-      return
-    }
-
-    delete this.zilos[address]
-
-    this.subscribeToAppChanges()
   }
 
   /**
@@ -1193,9 +1134,8 @@ export class Zilswap {
     // clear existing subscription, if any
     this.subscription?.stop()
 
-    const ziloContractHashes = Object.keys(this.zilos)
     const subscription = this.zilliqa.subscriptionBuilder.buildEventLogSubscriptions(WSS[this.network], {
-      addresses: [this.contractHash, ...ziloContractHashes],
+      addresses: [this.contractHash],
     })
 
     subscription.subscribe({ query: MessageType.NEW_BLOCK })
@@ -1207,29 +1147,6 @@ export class Zilswap {
     subscription.emitter.on(MessageType.NEW_BLOCK, event => {
       // console.log('ws new block: ', JSON.stringify(event, null, 2))
       this.updateBlockHeight().then(() => this.updateObservedTxs())
-    })
-
-    subscription.emitter.on(MessageType.EVENT_LOG, event => {
-      if (!event.value) return
-      // console.log('ws update: ', JSON.stringify(event, null, 2))
-      this.updateAppState()
-
-      // update zilo states
-
-      const ziloAddresses = Object.keys(this.zilos)
-      if (!ziloAddresses.length) return
-
-      // loop through events to find updates in registered zilos
-      for (const item of event.value) {
-        const byStr20Address = `0x${item.address}`
-        const index = ziloAddresses.indexOf(byStr20Address)
-        if (index >= 0) {
-          this.zilos[byStr20Address].updateZiloState()
-
-          // remove updated zilo contract from list
-          ziloAddresses.splice(index, 1)
-        }
-      }
     })
 
     subscription.emitter.on(MessageType.UNSUBSCRIBE, event => {
@@ -1273,13 +1190,6 @@ export class Zilswap {
     const response = await this.zilliqa.blockchain.getNumTxBlocks()
     const bNum = parseInt(response.result!, 10)
     this.currentBlock = bNum
-
-    for (const ziloAddress of Object.keys(this.zilos)) {
-      // updateBlockHeight should only trigger update if
-      // contract state will be changed, i.e. only when
-      // currentBlock === zilo init.start_block or init.end_block.
-      await this.zilos[ziloAddress].updateBlockHeight(bNum)
-    }
   }
 
   private async updateAppState(): Promise<void> {

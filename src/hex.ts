@@ -1230,8 +1230,9 @@ export class Hex {
     // clear existing subscription, if any
     this.subscription?.stop()
 
+    const ziloContractHashes = Object.keys(this.zilos)
     const subscription = this.zilliqa.subscriptionBuilder.buildEventLogSubscriptions(WSS[this.network], {
-      addresses: [this.contractHash],
+      addresses: [this.contractHash, ...ziloContractHashes],
     })
 
     subscription.subscribe({ query: MessageType.NEW_BLOCK })
@@ -1249,6 +1250,29 @@ export class Hex {
       if (!event.value) return
       // console.log('ws update: ', JSON.stringify(event, null, 2))
       this.updateAppState()
+    })
+
+    subscription.emitter.on(MessageType.EVENT_LOG, event => {
+      if (!event.value) return
+      // console.log('ws update: ', JSON.stringify(event, null, 2))
+      this.updateAppState()
+
+      // update zilo states
+
+      const ziloAddresses = Object.keys(this.zilos)
+      if (!ziloAddresses.length) return
+
+      // loop through events to find updates in registered zilos
+      for (const item of event.value) {
+        const byStr20Address = `0x${item.address}`
+        const index = ziloAddresses.indexOf(byStr20Address)
+        if (index >= 0) {
+          this.zilos[byStr20Address].updateZiloState()
+
+          // remove updated zilo contract from list
+          ziloAddresses.splice(index, 1)
+        }
+      }
     })
 
     subscription.emitter.on(MessageType.UNSUBSCRIBE, event => {
@@ -1292,6 +1316,13 @@ export class Hex {
     const response = await this.zilliqa.blockchain.getNumTxBlocks()
     const bNum = parseInt(response.result!, 10)
     this.currentBlock = bNum
+
+    for (const ziloAddress of Object.keys(this.zilos)) {
+      // updateBlockHeight should only trigger update if
+      // contract state will be changed, i.e. only when
+      // currentBlock === zilo init.start_block or init.end_block.
+      await this.zilos[ziloAddress].updateBlockHeight(bNum)
+    }
   }
 
   private async updateAppState(): Promise<void> {

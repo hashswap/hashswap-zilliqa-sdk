@@ -1615,7 +1615,7 @@ export class Hex {
     this.checkAppLoadedWithUser()
     const user = this.appState!.currentUser!
 
-    if (token.hash === HUSD_HASH) {
+    if (token.hash === ZIL_HASH) {
       // Check zil balance
       const zilBalance = this.appState!.currentBalance!
       if (zilBalance.lt(amount)) {

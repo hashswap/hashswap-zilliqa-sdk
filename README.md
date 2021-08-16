@@ -4,75 +4,29 @@
 
 Install from npm:
 
-`npm install hashswap-zilliqa-sdk`
+`npm install hashswap-zilliqa-js-sdk`
 
 ## SDK Usage
 
 Initialize the sdk based on the required network, then call the required methods which will automatically map and call the corresponding smart contract correct transitions.
 
 ```ts
-  import { Hex } from 'hashswap-zilliqa-sdk'
+  import { Hex } from 'hashswap-zilliqa-js-sdk'
 
   (async () => {
     const hex = new Hex(Network.TestNet)
     await hex.initialize()
-    await hex.addLiquidity('SWTH', '42', '42')
+    await hex.addLiquidity('KIMT', '42', '42')
     await hex.teardown()
   })()
 ```
 
 ### Methods
 
-All public Zilswap methods can be found on the [`Zilswap` SDK object](./docs/classes/index.zilswap.md). 
+All public methods for Hashswap decentralized exchange are found in `Hex` SDK object 
 
-All public Zilo methods can be found on the [`Zilo` SDK object](./docs/classes/zilo.zilo-1.md). 
+All public methods for Hashswap token launch platform can be found on the `Launcher` SDK object
 
-Full typescript definitions can also be found in the [Modules](./docs/modules.md).
+All public methods for Hashswap influencer registration platform can be found on the `Register` SDK object
 
-The following is a list of methods to quickly get you started:
-
-#### Swap & Liquidity
-
-- `approveTokenTransferIfRequired` - approves transfers to zilswap for the given token contract, if the current approval amount is insufficient.
-- `addLiquidity` - adds liquidity to the pool
-- `removeLiquidity` - removes liquidity to the pool
-- `swapWithExactInput` - swaps a token for another token, specifying the exact amount that should be given.
-- `swapWithExactOutput` - swaps a token for another token, specifying the exact amount that should be received.
-
-#### Getters
-
-- `getAppState` - gets the current dApp state
-- `getPool` - gets the reserve values for a pool
-- `getObservedTxs` - gets the txs that the SDK is observing
-
-#### Configuration
-
-- `addToken` - adds a token that is not in the pre-built list
-- `observeTx` - observe a zilliqa blockchain tx
-- `setDeadlineBlocks` - set the number of blocks before a transition sent by the SDK to expires
-
-#### Helpers
-
-- `toUnitless` - converts a human amount into a unitless integer that is used by Scilla.
-- `toUnit` - converts a unitless integer used by scilla into a human readable amount.
-- `getRatesForInput` - get the current exchange rates for a pool by giving an input amount.
-- `getRatesForOutput` - get the current exchange rates for a pool by giving an output amount.
-
-## Test Usage
-
-1. Ensure enough tokens minted to your address on testnet
-2. Run `PRIVATE_KEY=xxx yarn run test`
-
-## Developing
-
-Generate documentation with typedoc. Install with:
-
-`npm i typedoc typedoc-plugin-markdown --global`
-
-then run:
-
-`typedoc --out ./doc ./src --excludePrivate --excludeNotExported --plugin typedoc-plugin-markdown`
-
-## Contributing
-
-Please review the [contribution guidelines](docs/CONTRIBUTING.md) before contributing or opening pull requests.
+This repository is under active development.

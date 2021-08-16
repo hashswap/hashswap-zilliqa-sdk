@@ -11,13 +11,13 @@ Install from npm:
 Initialize the sdk based on the required network, then call the required methods which will automatically map and call the corresponding smart contract correct transitions.
 
 ```ts
-  import { Zilswap } from 'zilswap-sdk'
+  import { Hex } from 'hashswap-zilliqa-sdk'
 
   (async () => {
-    const zilswap = new Zilswap(Network.TestNet)
-    await zilswap.initialize()
-    await zilswap.addLiquidity('SWTH', '42', '42')
-    await zilswap.teardown()
+    const hex = new Hex(Network.TestNet)
+    await hex.initialize()
+    await hex.addLiquidity('SWTH', '42', '42')
+    await hex.teardown()
   })()
 ```
 

@@ -39,6 +39,7 @@ export type ContractState = {
 
 export type AppState = {
   contractState: ContractState
+  launcherContractState: ContractState
   tokens: { [key in string]: TokenDetails }
   pools: { [key in string]?: Pool }
   currentUser: string | null
@@ -1432,10 +1433,12 @@ export class Hex {
       console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 86')
     })
 
+    const launcherContractState = contractState
     console.log('SDK ----- UPDATE APP STATE ---- 9')
     // Set new state
     this.appState = {
       contractState,
+      launcherContractState,
       tokens,
       pools,
       currentUser,

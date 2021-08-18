@@ -1536,6 +1536,9 @@ export class Hex {
     // Get Sponsortoken
     const sponsors: { [key in string]: SponsorToken } = {}
     poolTokenHashes.forEach(tokenHash => {
+      
+      if (!contractState.sponsors[tokenHash]) return
+      
       const poolSponsors = contractState.sponsors[tokenHash]
       const userSponserToken = poolSponsors![currentUser!]
       console.log('888888888888888888888')
@@ -1573,6 +1576,8 @@ export class Hex {
     // Get zeroSponsortoken
     const zerosponsor: { [key in string]: SponsorToken } = {}
     poolTokenHashes.forEach(tokenHash => {
+      if (!contractState.zero_sponsor[tokenHash]) return
+      
       const poolZeroSponsors = contractState.zero_sponsor[tokenHash]
       const zeroSponserToken = poolZeroSponsors![ZERO_HASH]
       console.log('888888888888888888888')

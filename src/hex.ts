@@ -70,7 +70,6 @@ export enum LaunchState {
   Dissolve = 'Dissolve',
 }
 
-
 export type Pool = {
   hashSponsorship: BigNumber
   tokenSponsorship: BigNumber
@@ -80,7 +79,7 @@ export type Pool = {
   userSponsor: SponsorToken
   zeroSponsor: SponsorToken
   totalSponsor: BigNumber
-  
+
   zilReserve: BigNumber
   tokenReserve: BigNumber
   exchangeRate: BigNumber // the zero slippage exchange rate
@@ -119,12 +118,12 @@ export class Hex {
   readonly launcherContract: Contract
   readonly launcherContractAddress: string
   readonly launcherContractHash: string
-  
+
   /* REGSITER contract attributes */
   readonly registerContract: Contract
   readonly registerContractAddress: string
   readonly registerContractHash: string
-  
+
   /* Zilswap initial launch offerings */
   readonly zilos: { [address: string]: Zilo }
 
@@ -162,18 +161,15 @@ export class Hex {
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
 
-
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
     this.launcherContractHash = fromBech32Address(this.launcherContractAddress).toLowerCase()
 
-
     // REGUSTER CONTRACT ADDERSS
     this.registerContractAddress = REGISTER[network]
     this.registerContract = (this.walletProvider || this.zilliqa).contracts.at(this.registerContractAddress)
     this.registerContractHash = fromBech32Address(this.registerContractAddress).toLowerCase()
-
 
     this.tokens = {}
     this.zilos = {}
@@ -1436,20 +1432,21 @@ export class Hex {
     const requests: BatchRequest[] = []
     const address = this.contractHash.replace('0x', '')
     const launcherAddress = this.launcherContractHash.replace('0x', '')
-    
+
     requests.push({ id: '1', method: 'GetSmartContractSubState', params: [address, 'output_after_fee', []], jsonrpc: '2.0' })
     requests.push({ id: '2', method: 'GetSmartContractSubState', params: [address, 'pools', []], jsonrpc: '2.0' })
     requests.push({ id: '3', method: 'GetSmartContractSubState', params: [address, 'total_contributions', []], jsonrpc: '2.0' })
-    
+
     requests.push({ id: '4', method: 'GetSmartContractSubState', params: [launcherAddress, 'launchs', []], jsonrpc: '2.0' })
     requests.push({ id: '5', method: 'GetSmartContractSubState', params: [launcherAddress, 'total_sponsorship', []], jsonrpc: '2.0' })
     requests.push({ id: '6', method: 'GetSmartContractSubState', params: [launcherAddress, 'influencer', []], jsonrpc: '2.0' })
 
     const result = await sendBatchRequest(this.rpcEndpoint, requests)
-    const contractState = Object.values(result).reduce((a, i) => ({ ...a, ...i }), { balances: {}, sponsors: {}, zero_sponsor: {} }) as ContractState
-
-
-
+    const contractState = Object.values(result).reduce((a, i) => ({ ...a, ...i }), {
+      balances: {},
+      sponsors: {},
+      zero_sponsor: {},
+    }) as ContractState
 
     // Get Balances from HEX
     if (currentUser) {
@@ -1467,7 +1464,6 @@ export class Hex {
         contractState.balances[token] = mapOrNull ? mapOrNull.balances[token] : {}
       })
     }
-
 
     // Get the launcher contract state - SPONSORS(Balances)
     if (currentUser) {
@@ -1494,7 +1490,6 @@ export class Hex {
       })
     }
 
-
     // Get the launcher contract state - ZERO SPONSORS(Balances)
     if (currentUser) {
       const requests4: BatchRequest[] = []
@@ -1520,8 +1515,6 @@ export class Hex {
       })
     }
 
-
-
     // Get id of tokens that have sponsor pools
     let poolTokenHashes = Object.keys(contractState.pools)
     poolTokenHashes = poolTokenHashes.concat(HUSD_HASH)
@@ -1539,8 +1532,6 @@ export class Hex {
       tokens[hash] = d
     })
     await Promise.all(promises)
-
-
 
     // Get Sponsortoken
     const sponsors: { [key in string]: SponsorToken } = {}
@@ -1615,9 +1606,6 @@ export class Hex {
       }
     })
 
-
-
-
     // Get pool details
     const pools: { [key in string]: Pool } = {}
     poolTokenHashes.forEach(tokenHash => {
@@ -1635,28 +1623,28 @@ export class Hex {
 
       let zilReserve = new BigNumber(0)
       let tokenReserve = new BigNumber(0)
-      let exchangeRate = new BigNumber(0) 
+      let exchangeRate = new BigNumber(0)
       let totalContribution = new BigNumber(0)
       let userContribution = new BigNumber(0)
       let userEntryBlock = new BigNumber(0)
       let contributionPercentage = new BigNumber(0)
 
-      if (contractState.pools[tokenHash]){
-	const [z, t] = contractState.pools[tokenHash]!.arguments
-	zilReserve = new BigNumber(z)
-	tokenReserve = new BigNumber(t)
-	exchangeRate = zilReserve.dividedBy(tokenReserve)
-	totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
-	const poolBalances = contractState.balances[tokenHash]
-	if (poolBalances !== undefined && currentUser) {
-	  const userPoolBalances = poolBalances![currentUser!]
-	  if (userPoolBalances !== undefined) {
-	    const [lp, eb] = userPoolBalances!.arguments
-	    userContribution = new BigNumber(lp)
-	    userEntryBlock = new BigNumber(eb)
-	  }
-	}
-	contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
+      if (contractState.pools[tokenHash]) {
+        const [z, t] = contractState.pools[tokenHash]!.arguments
+        zilReserve = new BigNumber(z)
+        tokenReserve = new BigNumber(t)
+        exchangeRate = zilReserve.dividedBy(tokenReserve)
+        totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
+        const poolBalances = contractState.balances[tokenHash]
+        if (poolBalances !== undefined && currentUser) {
+          const userPoolBalances = poolBalances![currentUser!]
+          if (userPoolBalances !== undefined) {
+            const [lp, eb] = userPoolBalances!.arguments
+            userContribution = new BigNumber(lp)
+            userEntryBlock = new BigNumber(eb)
+          }
+        }
+        contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
       }
 
       pools[tokenHash] = {
@@ -1668,8 +1656,8 @@ export class Hex {
         userSponsor,
         zeroSponsor,
         totalSponsor,
-        
-	zilReserve,
+
+        zilReserve,
         tokenReserve,
         exchangeRate,
         totalContribution,

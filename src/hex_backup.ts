@@ -8,7 +8,7 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, ZERO_HASH } from './constants'
+import { APIS, WSS, CONTRACTS, HEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH } from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -31,12 +31,6 @@ export type TokenDetails = {
 }
 
 export type ContractState = {
-  influencer: { [key in string]?: string }
-  launchs: { [key in string]?: { arguments: ReadonlyArray<string> } }
-  sponsors: { [key in string]?: { [key2 in string]?: { arguments: ReadonlyArray<any> } } }
-  zero_sponsor: { [key in string]?: { [key2 in string]?: { arguments: ReadonlyArray<any> } } }
-  total_sponsorship: { [key in string]?: string }
-
   balances: { [key in string]?: { [key2 in string]?: { arguments: ReadonlyArray<any> } } }
   output_after_fee: string
   pools: { [key in string]?: { arguments: ReadonlyArray<string> } }
@@ -52,35 +46,7 @@ export type AppState = {
   currentBalance: BigNumber | null
 }
 
-export type SponsorToken = {
-  sponsorHusd: BigNumber
-  removeHusd: BigNumber
-  transactionFee: BigNumber
-  entryBlock: BigNumber
-  lockIn: BigNumber
-}
-
-export enum LaunchState {
-  Undefined = 'Undefined',
-  Validation = 'Validation',
-  Open = 'Open',
-  ToLaunch = 'ToLaunch',
-  Launched = 'Launched',
-  OnHold = 'OnHold',
-  Dissolve = 'Dissolve',
-}
-
-
 export type Pool = {
-  hashSponsorship: BigNumber
-  tokenSponsorship: BigNumber
-  targetRate: BigNumber // price set by influencer
-  deadline: BigNumber
-  state: LaunchState
-  userSponsor: SponsorToken
-  zeroSponsor: SponsorToken
-  totalSponsor: BigNumber
-  
   zilReserve: BigNumber
   tokenReserve: BigNumber
   exchangeRate: BigNumber // the zero slippage exchange rate
@@ -110,21 +76,11 @@ export class Hex {
   private deadlineBuffer: number = 3
   private currentBlock: number = -1
 
-  /* HEX contract attributes */
+  /* Zilswap contract attributes */
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
 
-  /* LAUNCHER contract attributes */
-  readonly launcherContract: Contract
-  readonly launcherContractAddress: string
-  readonly launcherContractHash: string
-  
-  /* REGSITER contract attributes */
-  readonly registerContract: Contract
-  readonly registerContractAddress: string
-  readonly registerContractHash: string
-  
   /* Zilswap initial launch offerings */
   readonly zilos: { [address: string]: Zilo }
 
@@ -157,24 +113,9 @@ export class Hex {
     }
     console.log('SDK ----- INITIALIZE ----- 2')
 
-    // HEX CONTRACT DETAILS
     this.contractAddress = HEX[network]
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
-
-
-    // LAUNCHER CONTRACT ADDRESS
-    this.launcherContractAddress = LAUNCHER[network]
-    this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
-    this.launcherContractHash = fromBech32Address(this.launcherContractAddress).toLowerCase()
-
-
-    // REGUSTER CONTRACT ADDERSS
-    this.registerContractAddress = REGISTER[network]
-    this.registerContract = (this.walletProvider || this.zilliqa).contracts.at(this.registerContractAddress)
-    this.registerContractHash = fromBech32Address(this.registerContractAddress).toLowerCase()
-
-
     this.tokens = {}
     this.zilos = {}
     this._txParams.version = CHAIN_VERSIONS[network]
@@ -1292,7 +1233,7 @@ export class Hex {
 
     const ziloContractHashes = Object.keys(this.zilos)
     const subscription = this.zilliqa.subscriptionBuilder.buildEventLogSubscriptions(WSS[this.network], {
-      addresses: [this.contractHash, this.launcherContractHash, this.registerContractHash, ...ziloContractHashes],
+      addresses: [this.contractHash, ...ziloContractHashes],
     })
 
     subscription.subscribe({ query: MessageType.NEW_BLOCK })
@@ -1385,44 +1326,6 @@ export class Hex {
     }
   }
 
-  private readOptionalState(optString: string, argString: string[]): BigNumber {
-    if (optString === 'Some') {
-      return new BigNumber(argString[0])
-    }
-
-    return new BigNumber(0)
-  }
-
-  private readLaunchState(stateString: string): LaunchState {
-    const constructorHash = this.launcherContractHash
-    const validationString = constructorHash + '.' + 'Validation'
-    const openString = constructorHash + '.' + 'Open'
-    const toLaunchString = constructorHash + '.' + 'ToLaunch'
-    const launchedString = constructorHash + '.' + 'Launched'
-    const onHoldString = constructorHash + '.' + 'OnHold'
-    const dissolveString = constructorHash + '.' + 'Dissolve'
-
-    if (stateString === validationString) {
-      return LaunchState.Validation
-    }
-    if (stateString === openString) {
-      return LaunchState.Open
-    }
-    if (stateString === toLaunchString) {
-      return LaunchState.ToLaunch
-    }
-    if (stateString === launchedString) {
-      return LaunchState.Launched
-    }
-    if (stateString === onHoldString) {
-      return LaunchState.OnHold
-    }
-    if (stateString === dissolveString) {
-      return LaunchState.Dissolve
-    }
-    return LaunchState.Undefined
-  }
-
   private async updateAppState(): Promise<void> {
     // Get user address
     console.log('SDK ----- UPDATE APP STATE ---- 1')
@@ -1432,26 +1335,18 @@ export class Hex {
       : this.zilliqa.wallet.defaultAccount?.address?.toLowerCase() || null
 
     console.log('SDK ----- UPDATE APP STATE ---- 2')
-    // Get the contract state for HEX
+    // Get the contract state
     const requests: BatchRequest[] = []
     const address = this.contractHash.replace('0x', '')
-    const launcherAddress = this.launcherContractHash.replace('0x', '')
-    
     requests.push({ id: '1', method: 'GetSmartContractSubState', params: [address, 'output_after_fee', []], jsonrpc: '2.0' })
     requests.push({ id: '2', method: 'GetSmartContractSubState', params: [address, 'pools', []], jsonrpc: '2.0' })
     requests.push({ id: '3', method: 'GetSmartContractSubState', params: [address, 'total_contributions', []], jsonrpc: '2.0' })
-    
-    requests.push({ id: '4', method: 'GetSmartContractSubState', params: [launcherAddress, 'launchs', []], jsonrpc: '2.0' })
-    requests.push({ id: '5', method: 'GetSmartContractSubState', params: [launcherAddress, 'total_sponsorship', []], jsonrpc: '2.0' })
-    requests.push({ id: '6', method: 'GetSmartContractSubState', params: [launcherAddress, 'influencer', []], jsonrpc: '2.0' })
-
+    console.log('SDK ----- UPDATE APP STATE ---- 3')
     const result = await sendBatchRequest(this.rpcEndpoint, requests)
-    const contractState = Object.values(result).reduce((a, i) => ({ ...a, ...i }), { balances: {}, sponsors: {}, zero_sponsor: {} }) as ContractState
+    console.log('SDK ----- UPDATE APP STATE ---- 4')
+    const contractState = Object.values(result).reduce((a, i) => ({ ...a, ...i }), { balances: {} }) as ContractState
+    console.log('SDK ----- UPDATE APP STATE ---- 5')
 
-
-
-
-    // Get Balances from HEX
     if (currentUser) {
       const requests2: BatchRequest[] = []
       Object.keys(contractState.pools).forEach(token => {
@@ -1468,60 +1363,7 @@ export class Hex {
       })
     }
 
-
-    // Get the launcher contract state - SPONSORS(Balances)
-    if (currentUser) {
-      const requests3: BatchRequest[] = []
-      Object.keys(contractState.launchs).forEach(token => {
-        requests3.push({
-          id: token,
-          method: 'GetSmartContractSubState',
-          params: [launcherAddress, 'sponsors', [token, currentUser]],
-          jsonrpc: '2.0',
-        })
-      })
-      const result3 = await sendBatchRequest(this.rpcEndpoint, requests3)
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.dir(result3, { depth: null })
-      console.log(result3)
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      Object.entries(result3).forEach(([token, mapOrNull]) => {
-        contractState.sponsors[token] = mapOrNull ? mapOrNull.sponsors[token] : {}
-      })
-    }
-
-
-    // Get the launcher contract state - ZERO SPONSORS(Balances)
-    if (currentUser) {
-      const requests4: BatchRequest[] = []
-      Object.keys(contractState.launchs).forEach(token => {
-        requests4.push({
-          id: token,
-          method: 'GetSmartContractSubState',
-          params: [launcherAddress, 'sponsors', [token, ZERO_HASH]],
-          jsonrpc: '2.0',
-        })
-      })
-      const result4 = await sendBatchRequest(this.rpcEndpoint, requests4)
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.dir(result4, { depth: null })
-      console.log(result4)
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      console.log('55555555555555555555')
-      Object.entries(result4).forEach(([token, mapOrNull]) => {
-        contractState.zero_sponsor[token] = mapOrNull ? mapOrNull.sponsors[token] : {}
-      })
-    }
-
-
-
+    console.log('SDK ----- UPDATE APP STATE ---- 6')
     // Get id of tokens that have sponsor pools
     let poolTokenHashes = Object.keys(contractState.pools)
     poolTokenHashes = poolTokenHashes.concat(HUSD_HASH)
@@ -1540,136 +1382,46 @@ export class Hex {
     })
     await Promise.all(promises)
 
-
-
-    // Get Sponsortoken
-    const sponsors: { [key in string]: SponsorToken } = {}
-    poolTokenHashes.forEach(tokenHash => {
-      const poolSponsors = contractState.sponsors[tokenHash]
-      const userSponserToken = poolSponsors![currentUser!]
-      console.log('888888888888888888888')
-      console.log('888888888888888888888')
-      console.log(tokenHash)
-      console.dir(userSponserToken!, { depth: null })
-      console.log(userSponserToken!)
-      console.log('888888888888888888888')
-      console.log('888888888888888888888')
-
-      let sponsorHusd = new BigNumber(0)
-      let removeHusd = new BigNumber(0)
-      let transactionFee = new BigNumber(0)
-      let entryBlock = new BigNumber(0)
-      let lockIn = new BigNumber(0)
-
-      if (userSponserToken !== undefined) {
-        const [sp, rp, tp, fb, l] = userSponserToken!.arguments
-        sponsorHusd = new BigNumber(sp)
-        removeHusd = new BigNumber(rp)
-        transactionFee = new BigNumber(tp)
-        entryBlock = this.readOptionalState(fb.constructor.toString(), fb.arguments)
-        lockIn = this.readOptionalState(l.constructor.toString(), l.arguments)
-      }
-
-      sponsors[tokenHash] = {
-        sponsorHusd,
-        removeHusd,
-        transactionFee,
-        entryBlock,
-        lockIn,
-      }
-    })
-
-    // Get zeroSponsortoken
-    const zerosponsor: { [key in string]: SponsorToken } = {}
-    poolTokenHashes.forEach(tokenHash => {
-      const poolZeroSponsors = contractState.zero_sponsor[tokenHash]
-      const zeroSponserToken = poolZeroSponsors![ZERO_HASH]
-      console.log('888888888888888888888')
-      console.log('888888888888888888888')
-      console.log(tokenHash)
-      console.dir(zeroSponserToken!, { depth: null })
-      console.log('888888888888888888888')
-      console.log('888888888888888888888')
-
-      let sponsorHusd = new BigNumber(0)
-      let removeHusd = new BigNumber(0)
-      let transactionFee = new BigNumber(0)
-      let entryBlock = new BigNumber(0)
-      let lockIn = new BigNumber(0)
-
-      if (zeroSponserToken !== undefined) {
-        const [sp, rp, tp, fb, l] = zeroSponserToken!.arguments
-        sponsorHusd = new BigNumber(sp)
-        removeHusd = new BigNumber(rp)
-        transactionFee = new BigNumber(tp)
-        entryBlock = this.readOptionalState(fb.constructor.toString(), fb.arguments)
-        lockIn = this.readOptionalState(l.constructor.toString(), l.arguments)
-      }
-
-      zerosponsor[tokenHash] = {
-        sponsorHusd,
-        removeHusd,
-        transactionFee,
-        entryBlock,
-        lockIn,
-      }
-    })
-
-
-
-
-    // Get pool details
+    console.log('SDK ----- UPDATE APP STATE ---- 8')
+    // Get exchange rates
     const pools: { [key in string]: Pool } = {}
-    poolTokenHashes.forEach(tokenHash => {
-      if (!contractState.launchs[tokenHash]) return
+    console.log('SDK ----- UPDATE APP STATE ---- 81')
+    tokenHashes.forEach(tokenHash => {
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 82')
+      if (!contractState.pools[tokenHash]) return
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 83')
 
-      const [x, y, p, s, d] = contractState.launchs[tokenHash]!.arguments
-      const hashSponsorship = new BigNumber(x)
-      const tokenSponsorship = new BigNumber(y)
-      const targetRate = new BigNumber(p)
-      const deadline = new BigNumber(d)
-      const state = this.readLaunchState(s.constructor.toString())
-      const userSponsor = sponsors[tokenHash]
-      const zeroSponsor = zerosponsor[tokenHash]
-      const totalSponsor = new BigNumber(contractState.total_sponsorship[tokenHash]!)
-
-      let zilReserve = new BigNumber(0)
-      let tokenReserve = new BigNumber(0)
-      let exchangeRate = new BigNumber(0) 
-      let totalContribution = new BigNumber(0)
+      const [x, y] = contractState.pools[tokenHash]!.arguments
+      console.log('SDK ---- BIGNUMBER TEST ------ 0000000')
+      console.log('NOTMAL X ===== ', x)
+      console.log('NORMAL Y =====', y)
+      const zilReserve = new BigNumber(x)
+      const tokenReserve = new BigNumber(y)
+      console.log('BIGNUMBER X ======', zilReserve)
+      console.log('BIGNUMBER Y ======', tokenReserve)
+      const exchangeRate = zilReserve.dividedBy(tokenReserve)
+      const totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
       let userContribution = new BigNumber(0)
       let userEntryBlock = new BigNumber(0)
-      let contributionPercentage = new BigNumber(0)
 
-      if (contractState.pools[tokenHash]){
-	const [x, y] = contractState.pools[tokenHash]!.arguments
-	const zilReserve = new BigNumber(x)
-	const tokenReserve = new BigNumber(y)
-	const exchangeRate = zilReserve.dividedBy(tokenReserve)
-	const totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
-	const poolBalances = contractState.balances[tokenHash]
-	if (poolBalances !== undefined && currentUser) {
-	  const userPoolBalances = poolBalances![currentUser!]
-	  if (userPoolBalances !== undefined) {
-	    const [lp, eb] = userPoolBalances!.arguments
-	    userContribution = new BigNumber(lp)
-	    userEntryBlock = new BigNumber(eb)
-	  }
-	}
-	const contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 84')
+      const poolBalances = contractState.balances[tokenHash]
+      console.log(poolBalances, tokenHash, 'SDK ----- UPDATE APP STATE ---- 841')
+      if (poolBalances !== undefined && currentUser) {
+        const userPoolBalances = poolBalances![currentUser!]
+        console.log(userPoolBalances, tokenHash, 'SDK ----- UPDATE APP STATE ---- 842')
+        if (userPoolBalances !== undefined) {
+          const [lp, eb] = userPoolBalances!.arguments
+          userContribution = new BigNumber(lp)
+          userEntryBlock = new BigNumber(eb)
+        }
       }
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 843')
+      const contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 85')
 
       pools[tokenHash] = {
-        hashSponsorship,
-        tokenSponsorship,
-        targetRate,
-        deadline,
-        state,
-        userSponsor,
-        zeroSponsor,
-        totalSponsor,
-        
-	zilReserve,
+        zilReserve,
         tokenReserve,
         exchangeRate,
         totalContribution,
@@ -1677,8 +1429,10 @@ export class Hex {
         userEntryBlock,
         contributionPercentage,
       }
+      console.log(tokenHash, 'SDK ----- UPDATE APP STATE ---- 86')
     })
 
+    console.log('SDK ----- UPDATE APP STATE ---- 9')
     // Set new state
     this.appState = {
       contractState,

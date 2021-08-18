@@ -1643,10 +1643,10 @@ export class Hex {
 
       if (contractState.pools[tokenHash]){
 	const [x, y] = contractState.pools[tokenHash]!.arguments
-	const zilReserve = new BigNumber(x)
-	const tokenReserve = new BigNumber(y)
-	const exchangeRate = zilReserve.dividedBy(tokenReserve)
-	const totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
+	zilReserve = new BigNumber(x)
+	tokenReserve = new BigNumber(y)
+	exchangeRate = zilReserve.dividedBy(tokenReserve)
+	totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
 	const poolBalances = contractState.balances[tokenHash]
 	if (poolBalances !== undefined && currentUser) {
 	  const userPoolBalances = poolBalances![currentUser!]
@@ -1656,7 +1656,7 @@ export class Hex {
 	    userEntryBlock = new BigNumber(eb)
 	  }
 	}
-	const contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
+	contributionPercentage = userContribution.dividedBy(totalContribution).times(100)
       }
 
       pools[tokenHash] = {

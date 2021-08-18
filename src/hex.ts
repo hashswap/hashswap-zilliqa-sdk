@@ -1642,9 +1642,9 @@ export class Hex {
       let contributionPercentage = new BigNumber(0)
 
       if (contractState.pools[tokenHash]){
-	const [x, y] = contractState.pools[tokenHash]!.arguments
-	zilReserve = new BigNumber(x)
-	tokenReserve = new BigNumber(y)
+	const [z, t] = contractState.pools[tokenHash]!.arguments
+	zilReserve = new BigNumber(z)
+	tokenReserve = new BigNumber(t)
 	exchangeRate = zilReserve.dividedBy(tokenReserve)
 	totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
 	const poolBalances = contractState.balances[tokenHash]

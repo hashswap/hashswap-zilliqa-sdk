@@ -1935,7 +1935,7 @@ export class Hex {
     return { contract, address, hash, name, symbol, decimals, whitelisted, registered }
   }
 
-  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber, spenderHash: string = this.contractHash) {
+  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber, spenderHash: string = this.contractHash ) {
     // Check init
     this.checkAppLoadedWithUser()
     const user = this.appState!.currentUser!
@@ -1966,7 +1966,7 @@ export class Hex {
         Required: ${this.toUnit(token.hash, amount.toString()).toString()},
         have: ${this.toUnit(token.hash, balance.toString()).toString()}.`)
       }
-      const allowance = new BigNumber(result.allowances?.allowances[user]?.[this.contractHash] || 0)
+      const allowance = new BigNumber(result.allowances?.allowances[user]?.[spenderHash] || 0)
       if (allowance.lt(amount)) {
         throw new Error(`Tokens need to be approved first.
         Required: ${this.toUnit(token.hash, amount.toString()).toString()},

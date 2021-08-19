@@ -596,6 +596,92 @@ export class Hex {
    * @param maxExchangeRateChange is the maximum allowed exchange rate flucuation
    * given in {@link https://www.investopedia.com/terms/b/basispoint.asp basis points}. Defaults to 200 = 2.00% if not provided.
    */
+  public async AddSponsor(tokenID: string, husdToAddStr: string): Promise<ObservedTx> {
+    // Check logged in
+    this.checkAppLoadedWithUser()
+
+    // Format token amounts
+    const token = this.getTokenDetails(tokenID)
+    const husd = this.getTokenDetails(HUSD_HASH)
+    const husdToAdd = new BigNumber(husdToAddStr)
+
+    // Calculate allowances
+    const pool = this.getPool(token.hash)
+    const zilAmount = new BN(0)
+
+    // Check HUSD balances
+    await this.checkAllowedBalance(husd, husdToAdd)
+
+    // Set Deadline
+    const deadline = this.deadlineBlock()
+
+    // Sending Transaction
+    console.log('sending add liquidity txn..')
+    const addSponsorTxn = await this.callContract(
+      this.launcherContract,
+      'AddSponser',
+      [
+        {
+          vname: 'token',
+          type: 'ByStr20',
+          value: token.hash,
+        },
+        {
+          vname: 'husd_amount',
+          type: 'Uint128',
+          value: husdToAdd.toString(),
+        },
+        {
+          vname: 'deadline_block',
+          type: 'BNum',
+          value: deadline.toString(),
+        },
+      ],
+      {
+        amount: zilAmount, // _amount
+        ...this.txParams(),
+      },
+      true
+    )
+
+    if (addSponsorTxn.isRejected()) {
+      throw new Error('Submitted transaction was rejected.')
+    }
+
+    const observeTxn = {
+      hash: addSponsorTxn.id!,
+      deadline,
+    }
+    await this.observeTx(observeTxn)
+
+    return observeTxn
+  }
+
+  /**
+   * Adds liquidity to the pool with the given `tokenID`. The given `zilsToAddHuman` represents the exact quantity of ZIL
+   * that will be contributed, while the given `tokensToAddHuman` represents the target quantity of ZRC-2 tokens to be
+   * contributed.
+   *
+   * To ensure the liquidity contributor does not lose value to arbitrage, the target token amount should be strictly
+   * derived from the current exchange rate that can be found using {@linkcode getPool}.
+   *
+   * The maximum fluctuation in exchange rate from the given parameters can be controlled through `maxExchangeRateChange`,
+   * to protect against changes in pool reserves between the txn submission and txn confirmation on the Zilliqa blockchain.
+   *
+   * If the pool has no liquidity yet, the token amount given will be the exact quantity of tokens that will be contributed,
+   * and the `maxExchangeRateChange` is ignored.
+   *
+   * The transaction is added to the list of observedTxs, and the observer will be notified on change in tx status.
+   *
+   * Note that all amounts should be given with decimals in it's human represented form, rather than as a unitless integer.
+   *
+   * @param tokenID is the token ID for the pool, which can be given by either it's symbol (defined in constants.ts),
+   * hash (0x...) or bech32 address (zil...).
+   * @param zilsToAddStr is the exact amount of zilliqas to contribute to the pool in ZILs as a unitless string.
+   * @param tokensToAddStr is the target amount of tokens to contribute to the pool as a unitless string.
+   * @param maxExchangeRateChange is the maximum allowed exchange rate flucuation
+   * given in {@link https://www.investopedia.com/terms/b/basispoint.asp basis points}. Defaults to 200 = 2.00% if not provided.
+   */
   public async addLiquidity(
     tokenID: string,
     husdToAddStr: string,

@@ -1935,7 +1935,7 @@ export class Hex {
     return { contract, address, hash, name, symbol, decimals, whitelisted, registered }
   }
 
-  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber) {
+  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber, spenderHash: string = this.contractHash ) {
     // Check init
     this.checkAppLoadedWithUser()
     const user = this.appState!.currentUser!
@@ -1956,7 +1956,7 @@ export class Hex {
       requests.push({
         id: 'allowances',
         method: 'GetSmartContractSubState',
-        params: [address, 'allowances', [user!, this.contractHash]],
+        params: [address, 'allowances', [user!, spenderHash]],
         jsonrpc: '2.0',
       })
       const result = await sendBatchRequest(this.rpcEndpoint, requests)

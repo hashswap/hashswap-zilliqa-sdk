@@ -1935,7 +1935,7 @@ export class Hex {
     return { contract, address, hash, name, symbol, decimals, whitelisted, registered }
   }
 
-  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber, spenderHash: string = this.contractHash ) {
+  private async checkAllowedBalance(token: TokenDetails, amount: BigNumber, spenderHash: string = this.contractHash) {
     // Check init
     this.checkAppLoadedWithUser()
     const user = this.appState!.currentUser!

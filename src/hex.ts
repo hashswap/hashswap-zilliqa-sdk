@@ -8,7 +8,22 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
+import {
+  APIS,
+  WSS,
+  CONTRACTS,
+  REGISTER,
+  LAUNCHER,
+  HEX,
+  DEX,
+  CHAIN_VERSIONS,
+  BASIS,
+  Network,
+  ZIL_HASH,
+  HUSD_HASH,
+  HASH_HASH,
+  ZERO_HASH,
+} from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -113,7 +128,7 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
-  
+
   /* HEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
@@ -170,7 +185,7 @@ export class Hex {
     this.dexContractAddress = DEX[network]
     this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
     this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
-    
+
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)

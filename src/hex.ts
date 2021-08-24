@@ -8,22 +8,7 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import {
-  APIS,
-  WSS,
-  CONTRACTS,
-  REGISTER,
-  LAUNCHER,
-  HEX,
-  DEX,
-  CHAIN_VERSIONS,
-  BASIS,
-  Network,
-  ZIL_HASH,
-  HUSD_HASH,
-  HASH_HASH,
-  ZERO_HASH,
-} from './constants'
+import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -33,6 +18,8 @@ import { Zilo, OnStateUpdate } from './zilo'
 export * as Zilo from './zilo'
 
 BigNumber.config({ EXPONENTIAL_AT: 1e9 }) // never!
+
+const bigZero = new BigNumber(0)
 
 export type TokenDetails = {
   contract: Contract // instance
@@ -86,14 +73,14 @@ export enum LaunchState {
 }
 
 export type Pool = {
-  hashSponsorship?: BigNumber
-  tokenSponsorship?: BigNumber
-  targetRate?: BigNumber // price set by influencer
-  deadline?: BigNumber
-  state?: LaunchState
-  userSponsor?: SponsorToken
-  zeroSponsor?: SponsorToken
-  totalSponsor?: BigNumber
+  hashSponsorship: BigNumber
+  tokenSponsorship: BigNumber
+  targetRate: BigNumber // price set by influencer
+  deadline: BigNumber
+  state: LaunchState
+  userSponsor: SponsorToken
+  zeroSponsor: SponsorToken
+  totalSponsor: BigNumber
 
   zilReserve: BigNumber
   tokenReserve: BigNumber
@@ -128,7 +115,7 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
-
+  
   /* HEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
@@ -185,7 +172,7 @@ export class Hex {
     this.dexContractAddress = DEX[network]
     this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
     this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
-
+    
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
@@ -1742,6 +1729,27 @@ export class Hex {
     poolTokenHashes.forEach(tokenHash => {
       if (tokenHash !== HASH_HASH) return
 
+      const hashSponsorship = bigZero
+      const tokenSponsorship = bigZero 
+      const targetRate = bigZero 
+      const deadline = bigZero
+      const state = this.readLaunchState("")
+      const sponsorHusd = new BigNumber(0)
+      const removeHusd = new BigNumber(0)
+      const transactionFee = new BigNumber(0)
+      const entryBlock = new BigNumber(0)
+      const lockIn = new BigNumber(0)
+      const sponsorToken: SponsorToken = {
+	sponsorHusd,
+	removeHusd,
+	transactionFee,
+	entryBlock,
+	lockIn,
+      }
+      const userSponsor = sponsorToken
+      const zeroSponsor = sponsorToken
+      const totalSponsor = new BigNumber(0)
+
       const [x, y] = contractState.pools[tokenHash]!.arguments
       const zilReserve = new BigNumber(x)
       const tokenReserve = new BigNumber(y)
@@ -1753,6 +1761,15 @@ export class Hex {
       const contributionPercentage = new BigNumber(0)
 
       pools[tokenHash] = {
+        hashSponsorship,
+        tokenSponsorship,
+        targetRate,
+        deadline,
+        state,
+        userSponsor,
+        zeroSponsor,
+        totalSponsor,
+
         zilReserve,
         tokenReserve,
         exchangeRate,

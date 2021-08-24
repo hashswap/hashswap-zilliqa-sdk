@@ -8,22 +8,7 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import {
-  APIS,
-  WSS,
-  CONTRACTS,
-  REGISTER,
-  LAUNCHER,
-  HEX,
-  DEX,
-  CHAIN_VERSIONS,
-  BASIS,
-  Network,
-  ZIL_HASH,
-  HUSD_HASH,
-  HASH_HASH,
-  ZERO_HASH,
-} from './constants'
+import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -86,14 +71,14 @@ export enum LaunchState {
 }
 
 export type Pool = {
-  hashSponsorship: BigNumber
-  tokenSponsorship: BigNumber
-  targetRate: BigNumber // price set by influencer
-  deadline: BigNumber
-  state: LaunchState
-  userSponsor: SponsorToken
-  zeroSponsor: SponsorToken
-  totalSponsor: BigNumber
+  hashSponsorship?: BigNumber
+  tokenSponsorship?: BigNumber
+  targetRate?: BigNumber // price set by influencer
+  deadline?: BigNumber
+  state?: LaunchState
+  userSponsor?: SponsorToken
+  zeroSponsor?: SponsorToken
+  totalSponsor?: BigNumber
 
   zilReserve: BigNumber
   tokenReserve: BigNumber
@@ -128,7 +113,7 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
-
+  
   /* HEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
@@ -185,7 +170,7 @@ export class Hex {
     this.dexContractAddress = DEX[network]
     this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
     this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
-
+    
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
@@ -1559,6 +1544,20 @@ export class Hex {
       zero_sponsor: {},
     }) as ContractState
 
+    // Get Pool state for HASH
+    const requests5: BatchRequest[] = []
+    const dexAddress = this.dexContractHash.replace('0x', '')
+    requests5.push({
+      id: HASH_HASH,
+      method: 'GetSmartContractSubState',
+      params: [dexAddress, 'pools', [HASH_HASH]],
+      jsonrpc: '2.0',
+    })
+    const result5 = await sendBatchRequest(this.rpcEndpoint, requests5)
+    Object.entries(result5).forEach(([token, mapOrNull]) => {
+      contractState.pools[token] = mapOrNull ? mapOrNull.pools[token] : {}
+    })
+
     // Get Balances from HEX
     if (currentUser) {
       const requests2: BatchRequest[] = []
@@ -1630,7 +1629,7 @@ export class Hex {
     let poolTokenHashes = Object.keys(contractState.pools)
     poolTokenHashes = poolTokenHashes.concat(Object.keys(contractState.launchs))
     poolTokenHashes = poolTokenHashes.concat(HUSD_HASH)
-    poolTokenHashes = poolTokenHashes.concat(HASH_HASH)
+    // poolTokenHashes = poolTokenHashes.concat(HASH_HASH)
 
     console.log('SDK ----- UPDATE APP STATE ---- 7')
     // Get id of tokens that have liquidity pools
@@ -1723,8 +1722,33 @@ export class Hex {
       }
     })
 
-    // Get pool details
+    // Get pool details for HASH token
     const pools: { [key in string]: Pool } = {}
+    poolTokenHashes.forEach(tokenHash => {
+      if (tokenHash !== HASH_HASH) return
+
+      const [x, y] = contractState.pools[tokenHash]!.arguments
+      const zilReserve = new BigNumber(x)
+      const tokenReserve = new BigNumber(y)
+      const exchangeRate = zilReserve.dividedBy(tokenReserve)
+      const totalContribution = new BigNumber(contractState.total_contributions[tokenHash]!)
+      const poolBalances = contractState.balances[tokenHash]
+      const userContribution = new BigNumber(0)
+      const userEntryBlock = new BigNumber(0)
+      const contributionPercentage = new BigNumber(0)
+
+      pools[tokenHash] = {
+        zilReserve,
+        tokenReserve,
+        exchangeRate,
+        totalContribution,
+        userContribution,
+        userEntryBlock,
+        contributionPercentage,
+      }
+    })
+
+    // Get pool details for all other tokens
     poolTokenHashes.forEach(tokenHash => {
       if (!contractState.launchs[tokenHash]) return
 

@@ -8,7 +8,7 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, ZERO_HASH } from './constants'
+import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -113,6 +113,11 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
+  
+  /* HEX contract attributes */
+  readonly dexContract: Contract
+  readonly dexContractAddress: string
+  readonly dexContractHash: string
 
   /* LAUNCHER contract attributes */
   readonly launcherContract: Contract
@@ -161,6 +166,11 @@ export class Hex {
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
 
+    // HEX CONTRACT DETAILS
+    this.dexContractAddress = DEX[network]
+    this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
+    this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
+    
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
@@ -1605,6 +1615,7 @@ export class Hex {
     let poolTokenHashes = Object.keys(contractState.pools)
     poolTokenHashes = poolTokenHashes.concat(Object.keys(contractState.launchs))
     poolTokenHashes = poolTokenHashes.concat(HUSD_HASH)
+    poolTokenHashes = poolTokenHashes.concat(HASH_HASH)
 
     console.log('SDK ----- UPDATE APP STATE ---- 7')
     // Get id of tokens that have liquidity pools

@@ -1,6 +1,6 @@
 {
   "name": "hashswap-zilliqa-js-sdk",
-  "version": "1.0.155",
+  "version": "1.0.156",
   "description": "Hashswap Javascript SDK for Zilliqa Network",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

@@ -8,7 +8,22 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
+import {
+  APIS,
+  WSS,
+  CONTRACTS,
+  REGISTER,
+  LAUNCHER,
+  HEX,
+  DEX,
+  CHAIN_VERSIONS,
+  BASIS,
+  Network,
+  ZIL_HASH,
+  HUSD_HASH,
+  HASH_HASH,
+  ZERO_HASH,
+} from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest, BatchResponse } from './batch'
 
@@ -115,7 +130,7 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
-  
+
   /* HEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
@@ -172,7 +187,7 @@ export class Hex {
     this.dexContractAddress = DEX[network]
     this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
     this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
-    
+
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
@@ -1285,14 +1300,13 @@ export class Hex {
       const { zilReserve, tokenReserve } = this.getReserves(tokenIn)
       epsilonOutput = tokenInAmount.times(zilReserve).dividedToIntegerBy(tokenReserve)
       expectedOutput = this.getOutputFor(tokenInAmount, tokenReserve, zilReserve)
-      console.log("EXTRA INFO")
-      console.log("EXTRA INFO")
+      console.log('EXTRA INFO')
+      console.log('EXTRA INFO')
       console.log(zilReserve, tokenReserve)
       console.log(epsilonOutput)
       console.log(expectedOutput)
-      console.log("EXTRA INFO")
-      console.log("EXTRA INFO")
-
+      console.log('EXTRA INFO')
+      console.log('EXTRA INFO')
     } else {
       // zrc2 to zrc2
       console.log('SDK ----- INSIDE GET OUTOUT ----- 444444')
@@ -1554,21 +1568,18 @@ export class Hex {
       zero_sponsor: {},
     }) as ContractState
 
-
-
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
     console.log(contractState)
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("NEW FUNCTION STARTING")
-
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('NEW FUNCTION STARTING')
 
     // Get Pool state for HASH
     const requests5: BatchRequest[] = []
@@ -1586,27 +1597,23 @@ export class Hex {
     const valResult5 = Object.values(result)
 
     Object.values(result5).forEach((res: BatchResponse) => {
-
       Object.values(res).forEach((pool: BatchResponse) => {
-      
-	Object.entries(pool).forEach(([token, mapOrNull]) => {
-        
-	  contractState.pools[token] = mapOrNull ? mapOrNull : {}
-      
-	})
+        Object.entries(pool).forEach(([token, mapOrNull]) => {
+          contractState.pools[token] = mapOrNull ? mapOrNull : {}
+        })
 
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log(pool)
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-      console.log("TESTIN INSIDEEEE ----------- +++++++++")
-/*
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log(pool)
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        console.log('TESTIN INSIDEEEE ----------- +++++++++')
+        /*
     ([token, mapOrNull]) => {
     
       console.log("INSIDEDEEE TESTTTT LOOOP")
@@ -1617,21 +1624,19 @@ export class Hex {
     })
   */
       })
-  })
-    console.log("NEW FUNCTION ENDINGGG")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
+    })
+    console.log('NEW FUNCTION ENDINGGG')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
     console.log(contractState)
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    console.log("++++++-------++++++-------+++++++---------++++++++++---------++++++++")
-    
-
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
+    console.log('++++++-------++++++-------+++++++---------++++++++++---------++++++++')
 
     // Get Balances from HEX
     if (currentUser) {
@@ -1803,21 +1808,21 @@ export class Hex {
       if (tokenHash !== HASH_HASH) return
 
       const hashSponsorship = bigZero
-      const tokenSponsorship = bigZero 
-      const targetRate = bigZero 
+      const tokenSponsorship = bigZero
+      const targetRate = bigZero
       const deadline = bigZero
-      const state = this.readLaunchState("")
+      const state = this.readLaunchState('')
       const sponsorHusd = new BigNumber(0)
       const removeHusd = new BigNumber(0)
       const transactionFee = new BigNumber(0)
       const entryBlock = new BigNumber(0)
       const lockIn = new BigNumber(0)
       const sponsorToken: SponsorToken = {
-	sponsorHusd,
-	removeHusd,
-	transactionFee,
-	entryBlock,
-	lockIn,
+        sponsorHusd,
+        removeHusd,
+        transactionFee,
+        entryBlock,
+        lockIn,
       }
       const userSponsor = sponsorToken
       const zeroSponsor = sponsorToken

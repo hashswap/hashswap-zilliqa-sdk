@@ -8,7 +8,22 @@ import { BN, Long, units } from '@zilliqa-js/util'
 import { BigNumber } from 'bignumber.js'
 import { Mutex } from 'async-mutex'
 
-import { APIS, WSS, CONTRACTS, REGISTER, LAUNCHER, HEX, DEX, CHAIN_VERSIONS, BASIS, Network, ZIL_HASH, HUSD_HASH, HASH_HASH, ZERO_HASH } from './constants'
+import {
+  APIS,
+  WSS,
+  CONTRACTS,
+  REGISTER,
+  LAUNCHER,
+  HEX,
+  DEX,
+  CHAIN_VERSIONS,
+  BASIS,
+  Network,
+  ZIL_HASH,
+  HUSD_HASH,
+  HASH_HASH,
+  ZERO_HASH,
+} from './constants'
 import { unitlessBigNumber, toPositiveQa, isLocalStorageAvailable } from './utils'
 import { sendBatchRequest, BatchRequest } from './batch'
 
@@ -115,7 +130,7 @@ export class Hex {
   readonly contract: Contract
   readonly contractAddress: string
   readonly contractHash: string
-  
+
   /* HEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
@@ -172,7 +187,7 @@ export class Hex {
     this.dexContractAddress = DEX[network]
     this.dexContract = (this.walletProvider || this.zilliqa).contracts.at(this.dexContractAddress)
     this.dexContractHash = fromBech32Address(this.dexContractAddress).toLowerCase()
-    
+
     // LAUNCHER CONTRACT ADDRESS
     this.launcherContractAddress = LAUNCHER[network]
     this.launcherContract = (this.walletProvider || this.zilliqa).contracts.at(this.launcherContractAddress)
@@ -1730,21 +1745,21 @@ export class Hex {
       if (tokenHash !== HASH_HASH) return
 
       const hashSponsorship = bigZero
-      const tokenSponsorship = bigZero 
-      const targetRate = bigZero 
+      const tokenSponsorship = bigZero
+      const targetRate = bigZero
       const deadline = bigZero
-      const state = this.readLaunchState("")
+      const state = this.readLaunchState('')
       const sponsorHusd = new BigNumber(0)
       const removeHusd = new BigNumber(0)
       const transactionFee = new BigNumber(0)
       const entryBlock = new BigNumber(0)
       const lockIn = new BigNumber(0)
       const sponsorToken: SponsorToken = {
-	sponsorHusd,
-	removeHusd,
-	transactionFee,
-	entryBlock,
-	lockIn,
+        sponsorHusd,
+        removeHusd,
+        transactionFee,
+        entryBlock,
+        lockIn,
       }
       const userSponsor = sponsorToken
       const zeroSponsor = sponsorToken

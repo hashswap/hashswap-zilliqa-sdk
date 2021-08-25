@@ -32,23 +32,23 @@ export const HELLO: { [key in Networks]: string } = {
 }
 
 export const REGISTER: { [key in Networks]: string } = {
-  [Network.MainNet]: 'zil134ccch5aftwgaqqmg5dvz2c7ex4879eeul5n7l',
-  [Network.TestNet]: 'zil134ccch5aftwgaqqmg5dvz2c7ex4879eeul5n7l',
+  [Network.MainNet]: 'zil1fql2ezlwgf5cmzee5cc9afge7238pg4exyek5x',
+  [Network.TestNet]: 'zil1fql2ezlwgf5cmzee5cc9afge7238pg4exyek5x',
 }
 
 export const HUSD: { [key in Networks]: string } = {
-  [Network.MainNet]: 'zil1r7zq4xrd4nncm65j2vthljar2kv284qnp2qp7a',
-  [Network.TestNet]: 'zil1r7zq4xrd4nncm65j2vthljar2kv284qnp2qp7a',
+  [Network.MainNet]: 'zil1zlk9fgkmn3kcfnqywrdhg5hnmynmakcjmx6sw5',
+  [Network.TestNet]: 'zil1zlk9fgkmn3kcfnqywrdhg5hnmynmakcjmx6sw5',
 }
 
 export const LAUNCHER: { [key in Networks]: string } = {
-  [Network.MainNet]: 'zil14xrxq7wjahjm0j58327x5skxs2ynlr58l2k04z',
-  [Network.TestNet]: 'zil14xrxq7wjahjm0j58327x5skxs2ynlr58l2k04z',
+  [Network.MainNet]: 'zil1fveammm4wlpxa549n0up96tlwvqwavhuvatu8s',
+  [Network.TestNet]: 'zil1fveammm4wlpxa549n0up96tlwvqwavhuvatu8s',
 }
 
 export const HEX: { [key in Networks]: string } = {
-  [Network.MainNet]: 'zil1stmzdluhem0l0wklnplcsz222n63uyed2kzdwj',
-  [Network.TestNet]: 'zil1stmzdluhem0l0wklnplcsz222n63uyed2kzdwj',
+  [Network.MainNet]: 'zil1f67crjvhrnfqvy0lx33g5pz3dm8synrncg8ka8',
+  [Network.TestNet]: 'zil1f67crjvhrnfqvy0lx33g5pz3dm8synrncg8ka8',
 }
 
 export enum ILOState {
@@ -68,5 +68,5 @@ export const BASIS = 10000
 
 export const ZERO_HASH = '0x0000000000000000000000000000000000000000'
 export const ZIL_HASH = '0x0000000000000000000000000000000000000000'
-export const HUSD_HASH = '0x1f840a986dace78dea9253177fcba35598a3d413'
-export const HASH_HASH = '0x55547edf0fd199f8491d12501f7f6085685975ed'
+export const HUSD_HASH = '0x17ec54a2db9c6d84cc0470db7452f3d927bedb12'
+export const HASH_HASH = '0x4ef830bf4023beb31ddac76774f94752cffd803d'

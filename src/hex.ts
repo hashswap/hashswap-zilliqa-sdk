@@ -946,15 +946,15 @@ export class Hex {
   ): Promise<ObservedTx> {
     this.checkAppLoadedWithUser()
 
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
-    console.log('INSIDEEEE TEST FUNCTOIN')
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
+    console.log("INSIDEEEE TEST FUNCTOIN")
     const tokenIn = this.getTokenDetails(tokenInID)
     const tokenOut = this.getTokenDetails(tokenOutID)
     const tokenInAmount = unitlessBigNumber(tokenInAmountStr)
@@ -962,7 +962,7 @@ export class Hex {
     // const minimumOutput = expectedOutput.times(BASIS).dividedToIntegerBy(BASIS + maxAdditionalSlippage)
     const parsedRecipientAddress = this.parseRecipientAddress(recipientAddress)
 
-    await this.checkAllowedBalance(tokenIn, tokenInAmount)
+    // await this.checkAllowedBalance(tokenIn, tokenInAmount)
 
     const deadline = this.deadlineBlock()
 
@@ -971,7 +971,7 @@ export class Hex {
     if (tokenIn.hash === HUSD_HASH) {
       // zil to zrc2
       txn = {
-        smartContract: this.husdContract,
+	smartContract: this.husdContract,
         transition: 'ConvertHusdtoHash',
         args: [
           {
@@ -988,7 +988,7 @@ export class Hex {
     } else {
       // zrc2 to zil
       txn = {
-        smartContract: this.hashContract,
+	smartContract: this.hashContract,
         transition: 'SwapExactTokensForHUSD',
         args: [
           {
@@ -1002,7 +1002,7 @@ export class Hex {
           ...this.txParams(),
         },
       }
-    }
+    } 
 
     console.log('sending swap txn..')
     const swapTxn = await this.callContract(txn.smartContract, txn.transition, txn.args, txn.params, true)

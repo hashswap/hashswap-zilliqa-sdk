@@ -16,6 +16,8 @@ import {
   LAUNCHER,
   HEX,
   DEX,
+  HASH,
+  HUSD,
   CHAIN_VERSIONS,
   BASIS,
   Network,
@@ -131,7 +133,17 @@ export class Hex {
   readonly contractAddress: string
   readonly contractHash: string
 
-  /* HEX contract attributes */
+  /* DEX contract attributes */
+  readonly hashContract: Contract
+  readonly hashContractAddress: string
+  readonly hashContractHash: string
+
+  /* HASH contract attributes */
+  readonly husdContract: Contract
+  readonly husdContractAddress: string
+  readonly husdContractHash: string
+
+  /* DEX contract attributes */
   readonly dexContract: Contract
   readonly dexContractAddress: string
   readonly dexContractHash: string
@@ -182,6 +194,16 @@ export class Hex {
     this.contractAddress = HEX[network]
     this.contract = (this.walletProvider || this.zilliqa).contracts.at(this.contractAddress)
     this.contractHash = fromBech32Address(this.contractAddress).toLowerCase()
+
+    // HASH CONTRACT DETAILS
+    this.hashContractAddress = HASH[network]
+    this.hashContract = (this.walletProvider || this.zilliqa).contracts.at(this.hashContractAddress)
+    this.hashContractHash = fromBech32Address(this.hashContractAddress).toLowerCase()
+
+    // HUSD CONTRACT DETAILS
+    this.husdContractAddress = HUSD[network]
+    this.husdContract = (this.walletProvider || this.zilliqa).contracts.at(this.husdContractAddress)
+    this.husdContractHash = fromBech32Address(this.husdContractAddress).toLowerCase()
 
     // HEX CONTRACT DETAILS
     this.dexContractAddress = DEX[network]
@@ -886,6 +908,103 @@ export class Hex {
 
     const observeTxn = {
       hash: removeLiquidityTxn.id!,
+      deadline,
+    }
+    await this.observeTx(observeTxn)
+
+    return observeTxn
+  }
+
+  /**
+   * Swaps ZIL or a ZRC-2 token with `tokenInID` for a corresponding ZIL or ZRC-2 token with `tokenOutID`.
+   *
+   * The exact amount of ZIL or ZRC-2 to be sent in (sold) is `tokenInAmountHuman`. The amount received is determined by the prevailing
+   * exchange rate at the current AppState. The expected amount to be received can be given fetched by getExpectedOutput (NYI).
+   *
+   * The maximum additional slippage incurred due to fluctuations in exchange rate from when the
+   * transaction is signed and when it is processed by the Zilliqa blockchain can be bounded by the
+   * `maxAdditionalSlippage` variable.
+   *
+   * The transaction is added to the list of observedTxs, and the observer will be notified on change in tx status.
+   *
+   * @param tokenInID is the token ID to be sent to Zilswap (sold), which can be given by either it's symbol (defined in constants.ts),
+   * hash (0x...) or bech32 address (zil...). The hash for ZIL is represented by the HUSD_HASH constant.
+   * @param tokenOutID is the token ID to be taken from Zilswap (bought), which can be given by either it's symbol (defined in constants.ts),
+   * hash (0x...) or bech32 address (zil...). The hash for ZIL is represented by the HUSD_HASH constant.
+   * @param tokenInAmountStr is the exact amount of tokens to be sent to Zilswap as a unitless string (without decimals).
+   * @param maxAdditionalSlippage is the maximum additional slippage (on top of slippage due to constant product formula) that the
+   * transition will allow before reverting.
+   * @param recipientAddress is an optional recipient address for receiving the output of the swap in base16 (0x...) or bech32 (zil...).
+   * Defaults to the sender address if `null` or undefined.
+   */
+  public async swapHashHusd(
+    tokenInID: string,
+    tokenOutID: string,
+    tokenInAmountStr: string,
+    maxAdditionalSlippage: number = 200,
+    recipientAddress: string | null = null
+  ): Promise<ObservedTx> {
+    this.checkAppLoadedWithUser()
+
+    const tokenIn = this.getTokenDetails(tokenInID)
+    const tokenOut = this.getTokenDetails(tokenOutID)
+    const tokenInAmount = unitlessBigNumber(tokenInAmountStr)
+    // const { expectedOutput } = this.getOutputs(tokenIn, tokenOut, tokenInAmount)
+    // const minimumOutput = expectedOutput.times(BASIS).dividedToIntegerBy(BASIS + maxAdditionalSlippage)
+    const parsedRecipientAddress = this.parseRecipientAddress(recipientAddress)
+
+    await this.checkAllowedBalance(tokenIn, tokenInAmount)
+
+    const deadline = this.deadlineBlock()
+
+    let txn: { smartContract: Contract; transition: string; args: Value[]; params: CallParams }
+    let smartContract = this.contract
+
+    if (tokenIn.hash === HUSD_HASH) {
+      // zil to zrc2
+      txn = {
+	smartContract: this.husdContract,
+        transition: 'ConvertHusdtoHash',
+        args: [
+          {
+            vname: 'amount',
+            type: 'Uint128',
+            value: tokenInAmount.toString(),
+          },
+        ],
+        params: {
+          amount: new BN(0),
+          ...this.txParams(),
+        },
+      }
+    } else {
+      // zrc2 to zil
+      txn = {
+	smartContract: this.hashContract,
+        transition: 'SwapExactTokensForHUSD',
+        args: [
+          {
+            vname: 'amount',
+            type: 'Uint128',
+            value: tokenInAmount.toString(),
+          },
+        ],
+        params: {
+          amount: new BN(0),
+          ...this.txParams(),
+        },
+      }
+    } 
+
+    console.log('sending swap txn..')
+    const swapTxn = await this.callContract(txn.smartContract, txn.transition, txn.args, txn.params, true)
+
+    if (swapTxn.isRejected()) {
+      throw new Error('Submitted transaction was rejected.')
+    }
+
+    const observeTxn = {
+      hash: swapTxn.id!,
       deadline,
     }
     await this.observeTx(observeTxn)

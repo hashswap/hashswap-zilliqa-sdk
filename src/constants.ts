@@ -36,6 +36,11 @@ export const REGISTER: { [key in Networks]: string } = {
   [Network.TestNet]: 'zil134ccch5aftwgaqqmg5dvz2c7ex4879eeul5n7l',
 }
 
+export const HASH: { [key in Networks]: string } = {
+  [Network.MainNet]: 'zil12428ahc06xvlsjgazfgp7lmqs459ja0dn268t3',
+  [Network.TestNet]: 'zil12428ahc06xvlsjgazfgp7lmqs459ja0dn268t3',
+}
+
 export const HUSD: { [key in Networks]: string } = {
   [Network.MainNet]: 'zil1r7zq4xrd4nncm65j2vthljar2kv284qnp2qp7a',
   [Network.TestNet]: 'zil1r7zq4xrd4nncm65j2vthljar2kv284qnp2qp7a',

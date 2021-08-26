@@ -962,7 +962,7 @@ export class Hex {
     if (tokenIn.hash === HUSD_HASH) {
       // zil to zrc2
       txn = {
-        smartContract: this.husdContract,
+	smartContract: this.husdContract,
         transition: 'ConvertHusdtoHash',
         args: [
           {
@@ -979,8 +979,8 @@ export class Hex {
     } else {
       // zrc2 to zil
       txn = {
-        smartContract: this.hashContract,
-        transition: 'SwapExactTokensForHUSD',
+	smartContract: this.hashContract,
+        transition: 'ConvertHashtoHusd',
         args: [
           {
             vname: 'amount',
@@ -993,7 +993,7 @@ export class Hex {
           ...this.txParams(),
         },
       }
-    }
+    } 
 
     console.log('sending swap txn..')
     const swapTxn = await this.callContract(txn.smartContract, txn.transition, txn.args, txn.params, true)

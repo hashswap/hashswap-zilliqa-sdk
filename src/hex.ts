@@ -958,7 +958,6 @@ export class Hex {
     const deadline = this.deadlineBlock()
 
     let txn: { smartContract: Contract; transition: string; args: Value[]; params: CallParams }
-    let smartContract = this.contract
 
     if (tokenIn.hash === HUSD_HASH) {
       // zil to zrc2
